@@ -72,7 +72,6 @@ dependencies {
     //call images from network
     implementation("io.coil-kt:coil-compose:2.6.0")
 
-    //implementation("com.github.bumptech.glide:compose:1.0.0-alpha.1")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

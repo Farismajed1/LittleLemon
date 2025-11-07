@@ -211,7 +211,7 @@ private fun Categories(
 
 
 @Composable
-fun CategoryButton(
+private fun CategoryButton(
     buttonName: String,
     onClick: () -> Unit,
     isSelected: Boolean

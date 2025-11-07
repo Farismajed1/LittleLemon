@@ -4,6 +4,5 @@ import android.content.SharedPreferences
 import com.example.littlelemon.data.model.FieldNames
 
 
-fun getUserInfo(sharedPreferences: SharedPreferences, field: FieldNames): String {
-    return sharedPreferences.getString(field.name, "") ?: ""
-}
+fun getUserInfo(sharedPreferences: SharedPreferences, field: FieldNames) =
+    sharedPreferences.getString(field.name, "") ?: ""

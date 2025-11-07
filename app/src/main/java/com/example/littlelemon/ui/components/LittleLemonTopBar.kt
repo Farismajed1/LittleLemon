@@ -19,6 +19,7 @@ import com.example.littlelemon.Destination
 import com.example.littlelemon.Home
 import com.example.littlelemon.Profile
 import com.example.littlelemon.R
+import com.example.littlelemon.functions.helper.popBack
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,11 +64,7 @@ fun LittleLemonTopBar(screen: Destination, navController: NavHostController) {
                 }
             } else {
                 IconButton(
-                    onClick = {
-                        navController.previousBackStackEntry?.let {
-                            navController.popBackStack()
-                        }
-                    }
+                    onClick = { popBack(navController = navController) }
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.ic_back_arrow),
