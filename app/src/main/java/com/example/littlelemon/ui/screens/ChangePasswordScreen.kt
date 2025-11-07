@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,6 +26,7 @@ import com.example.littlelemon.data.model.TextFieldValues
 import com.example.littlelemon.data.model.UserInputState
 import com.example.littlelemon.functions.extended.showMessage
 import com.example.littlelemon.functions.helper.getUserInfo
+import com.example.littlelemon.functions.helper.popBack
 import com.example.littlelemon.ui.components.AppButton
 import com.example.littlelemon.ui.components.AppTextField
 import com.example.littlelemon.ui.components.LittleLemonTopBar
@@ -36,75 +38,91 @@ fun ChangePasswordScreen(
     sharedPreferences: SharedPreferences,
     navController: NavHostController
 ) {
-
-    var userInput by remember { mutableStateOf(UserInputState()) }
-
-    val textFieldValues = listOf(
-        TextFieldValues().getFieldValue(FieldNames.PreviousPassword, userInput),
-        TextFieldValues().getFieldValue(FieldNames.Password, userInput),
-        TextFieldValues().getFieldValue(FieldNames.ConfirmPassword, userInput)
-    )
-
     Scaffold(
         topBar = { LittleLemonTopBar(screen = ChangePassword, navController = navController) }
     ) { innerPadding ->
-        Column(
-            Modifier
-                .padding(innerPadding)
-                .padding(horizontal = horizontalScreenPadding)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(text = "Change Password", style = MaterialTheme.typography.titleMedium)
+        ChangePasswordForm(
+            innerPadding = innerPadding,
+            horizontalScreenPadding = horizontalScreenPadding,
+            sharedPreferences = sharedPreferences,
+            context = context,
+            navController = navController
+        )
+    }
+}
 
-            textFieldValues.forEach { field ->
-                AppTextField(
-                    title = if (field.title == FieldNames.FirstName) "Previous password" else field.title.name,
-                    value = field.value,
-                    onValueChange = { input ->
-                        userInput = userInput.updateData(field = field.title, value = input)
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = field.keyboardType,
-                        imeAction = field.imeAction
-                    ),
-                    visualTransformation = field.visualTransformation,
-                    isError = field.isError,
-                    errorMessage = field.errorMessage
-                )
-            }
+@Composable
+private fun ChangePasswordForm(
+    innerPadding: PaddingValues,
+    horizontalScreenPadding: Dp,
+    sharedPreferences: SharedPreferences,
+    context: Context,
+    navController: NavHostController
+){
+    var userInput by remember { mutableStateOf(UserInputState()) }
 
-            AppButton(
-                title = "Change password",
-                onClick = {
+    val textFieldValues = listOf(
+        TextFieldValues(FieldNames.PreviousPassword).getFieldValue(userInput),
+        TextFieldValues(FieldNames.Password).getFieldValue(userInput),
+        TextFieldValues(FieldNames.ConfirmPassword).getFieldValue(userInput)
+    )
 
-                    userInput = userInput.validData()
+    Column(
+        Modifier
+            .padding(innerPadding)
+            .padding(horizontal = horizontalScreenPadding)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(text = "Change Password", style = MaterialTheme.typography.titleMedium)
 
-                    userInput = userInput.copy(
-                        isPreviousPasswordError = userInput.previousPassword != getUserInfo(
-                            sharedPreferences,
-                            FieldNames.Password
-                        ),
-                        thereIsNoError = !userInput.isPasswordError && !userInput.isPreviousPasswordError,
-                    )
-
-                    if (userInput.thereIsNoError) {
-
-                        sharedPreferences.edit {
-                            putString(FieldNames.Password.name, userInput.password)
-                        }
-
-                        navController.popBackStack()
-                    }
-
-                    context.showMessage(
-                        if (userInput.thereIsNoError)
-                            "Password has been changed successfully."
-                        else
-                            "An error occurred. Please try again."
-                    )
-                }
+        textFieldValues.forEach { field ->
+            AppTextField(
+                title = if (field.title == FieldNames.FirstName) "Previous password" else field.title.name,
+                value = field.value,
+                onValueChange = { input ->
+                    userInput = userInput.updateData(field = field.title, value = input)
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = field.keyboardType,
+                    imeAction = field.imeAction
+                ),
+                visualTransformation = field.visualTransformation,
+                isError = field.isError,
+                errorMessage = field.errorMessage
             )
         }
+
+        AppButton(
+            title = "Change password",
+            onClick = {
+
+                userInput = userInput.validData()
+
+                userInput = userInput.copy(
+                    isPreviousPasswordValid = userInput.previousPassword == getUserInfo(
+                        sharedPreferences,
+                        FieldNames.Password
+                    ),
+                    isAllDataValid = userInput.isPasswordValid && userInput.isPreviousPasswordValid
+                )
+
+                if (userInput.isAllDataValid) {
+
+                    sharedPreferences.edit {
+                        putString(FieldNames.Password.name, userInput.password)
+                    }
+
+                    popBack(navController = navController)
+                }
+
+                context.showMessage(
+                    if (userInput.isAllDataValid)
+                        "Password has been changed successfully."
+                    else
+                        "An error occurred. Please try again."
+                )
+            }
+        )
     }
 }

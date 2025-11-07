@@ -7,7 +7,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 
 data class TextFieldValues(
-    var title: FieldNames = FieldNames.FirstName,
+    var title: FieldNames,
     var value: String = "",
     var isError: Boolean = false,
     var keyboardType: KeyboardType = KeyboardType.Text,
@@ -16,41 +16,41 @@ data class TextFieldValues(
     var errorMessage: String = "",
 ) {
 
-    fun getFieldValue(fieldName: FieldNames, userInput: UserInputState): TextFieldValues {
+    fun getFieldValue(userInput: UserInputState): TextFieldValues {
 
-        return when(fieldName) {
+        return when(this.title) {
 
             FieldNames.FirstName ->
                 TextFieldValues(
-                    title = FieldNames.FirstName,
+                    title = this.title,
                     value = userInput.firstName,
-                    isError = userInput.isFirstNameError,
+                    isError = !userInput.isFirstNameValid,
                     errorMessage = userInput.nameErrorMessage
                 )
 
             FieldNames.LastName ->
                 TextFieldValues(
-                    title = FieldNames.LastName,
+                    title = this.title,
                     value = userInput.lastName,
-                    isError = userInput.isLastNameError,
+                    isError = !userInput.isLastNameValid,
                     errorMessage = userInput.nameErrorMessage
                 )
 
             FieldNames.Email ->
                 TextFieldValues(
-                    title = FieldNames.Email,
+                    title = this.title,
                     value = userInput.email,
                     keyboardType = KeyboardType.Email,
-                    isError = userInput.isEmailError,
+                    isError = !userInput.isEmailValid,
                     errorMessage = userInput.emailErrorMessage
                 )
 
             FieldNames.Password ->
                 TextFieldValues(
-                    title = FieldNames.Password,
+                    title = this.title,
                     value = userInput.password,
                     keyboardType = KeyboardType.Password,
-                    isError = userInput.isPasswordError,
+                    isError = !userInput.isPasswordValid,
                     visualTransformation = PasswordVisualTransformation(),
                     imeAction = ImeAction.Done,
                     errorMessage = userInput.passwordErrorMessage
@@ -58,19 +58,19 @@ data class TextFieldValues(
 
             FieldNames.ConfirmPassword ->
                 TextFieldValues(
-                    title = FieldNames.ConfirmPassword,
+                    title = this.title,
                     value = userInput.confirmPassword,
                     keyboardType = KeyboardType.Password,
-                    isError = userInput.isPasswordError,
+                    isError = !userInput.isPasswordValid,
                     visualTransformation = PasswordVisualTransformation(),
                     imeAction = ImeAction.Done,
                 )
 
             FieldNames.PreviousPassword ->
                 TextFieldValues(
-                    title = FieldNames.PreviousPassword,
+                    title = this.title,
                     value = userInput.previousPassword,
-                    isError = userInput.isPreviousPasswordError,
+                    isError = !userInput.isPreviousPasswordValid,
                     errorMessage = userInput.previousPasswordErrorMessage
                 )
         }

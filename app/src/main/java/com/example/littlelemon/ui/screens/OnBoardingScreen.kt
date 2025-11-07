@@ -68,7 +68,7 @@ fun OnBoardingScreen(
 }
 
 @Composable
-fun OnBoardingHeader(space: Double) {
+private fun OnBoardingHeader(space: Double) {
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -98,7 +98,7 @@ fun OnBoardingHeader(space: Double) {
 }
 
 @Composable
-fun OnBoardingForm(
+private fun OnBoardingForm(
     context: Context,
     space: Double,
     horizontalSpace: Dp,
@@ -109,11 +109,11 @@ fun OnBoardingForm(
     var userInput by remember { mutableStateOf(UserInputState()) }
 
     val textFieldValues = listOf(
-        TextFieldValues().getFieldValue(FieldNames.FirstName, userInput),
-        TextFieldValues().getFieldValue(FieldNames.LastName, userInput),
-        TextFieldValues().getFieldValue(FieldNames.Email, userInput),
-        TextFieldValues().getFieldValue(FieldNames.Password, userInput),
-        TextFieldValues().getFieldValue(FieldNames.ConfirmPassword, userInput),
+        TextFieldValues(FieldNames.FirstName).getFieldValue(userInput),
+        TextFieldValues(FieldNames.LastName).getFieldValue(userInput),
+        TextFieldValues(FieldNames.Email).getFieldValue(userInput),
+        TextFieldValues(FieldNames.Password).getFieldValue(userInput),
+        TextFieldValues(FieldNames.ConfirmPassword).getFieldValue(userInput),
     )
 
     Column(
@@ -151,7 +151,7 @@ fun OnBoardingForm(
             onClick = {
                 userInput = userInput.validData()
 
-                if (userInput.thereIsNoError) {
+                if (userInput.isAllDataValid) {
                     navController.navigate(Home.route)
                     sharedPreferences.edit{
                         putBoolean("isUserOnboarding", false)
@@ -163,7 +163,7 @@ fun OnBoardingForm(
                 }
 
                 context.showMessage(
-                    if(userInput.thereIsNoError)
+                    if(userInput.isAllDataValid)
                         "Registration successful!"
                     else
                         "Registration unsuccessful. Please review the form."

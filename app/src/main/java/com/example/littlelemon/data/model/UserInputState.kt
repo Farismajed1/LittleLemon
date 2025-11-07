@@ -9,12 +9,12 @@ data class UserInputState(
     val password: String = "",
     val confirmPassword: String = "",
     var previousPassword: String = "",
-    var isFirstNameError: Boolean = false,
-    var isLastNameError: Boolean = false,
-    var isEmailError: Boolean = false,
-    var isPasswordError: Boolean = false,
-    var isPreviousPasswordError: Boolean = false,
-    var thereIsNoError: Boolean = true,
+    var isFirstNameValid: Boolean = true,
+    var isLastNameValid: Boolean = true,
+    var isEmailValid: Boolean = true,
+    var isPasswordValid: Boolean = true,
+    var isPreviousPasswordValid: Boolean = true,
+    var isAllDataValid: Boolean = true,
     val nameErrorMessage: String = "Name is not Valid.",
     val emailErrorMessage: String = "Email is not Valid.",
     var passwordErrorMessage: String = "",
@@ -22,33 +22,35 @@ data class UserInputState(
 ) {
     fun validData(): UserInputState {
 
-        isFirstNameError =
-            firstName.all { it.isLetter() || it.isWhitespace() } && firstName.length > 1 && !firstName.trim().contains(
-                "  "
-            )
+        val checkName = { name: String ->
+            name.all { it.isLetter() || it.isWhitespace() } && name.length > 1 && !name.trim()
+                .contains("  ")
+        }
 
-        isLastNameError =
-            if (lastName.isNotEmpty()) lastName.all { it.isLetter() || it.isWhitespace() } && lastName.length > 1 && !lastName.contains(
-                "  "
-            ) else true
+        val firstName = checkName(this.firstName)
 
-        isEmailError = Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        val lastName =
+            if (this.lastName.isNotEmpty())
+                checkName(this.lastName)
+            else true
 
-        isPasswordError = (password == confirmPassword && password.length >= 8)
+        val email = Patterns.EMAIL_ADDRESS.matcher(this.email).matches()
 
-        passwordErrorMessage = when {
-            password.length < 8 -> "Password must be at least 8 characters long."
-            password != confirmPassword -> "Passwords do not match."
+        val password = (this.password == this.confirmPassword && this.password.length >= 8)
+
+        val passwordErrorMessage = when {
+            this.password.length < 8 -> "Password must be at least 8 characters long."
+            this.password != confirmPassword -> "Passwords do not match."
             else -> ""
         }
 
         return copy(
-            isFirstNameError = !isFirstNameError,
-            isLastNameError = !isLastNameError,
-            isEmailError = !isEmailError,
-            isPasswordError = !isPasswordError,
+            isFirstNameValid = firstName,
+            isLastNameValid = lastName,
+            isEmailValid = email,
+            isPasswordValid = password,
             passwordErrorMessage = passwordErrorMessage,
-            thereIsNoError = isFirstNameError && isEmailError && isPasswordError && isLastNameError
+            isAllDataValid = firstName && lastName && email && password
         )
     }
 

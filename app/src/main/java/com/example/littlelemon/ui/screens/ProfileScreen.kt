@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -20,6 +21,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.edit
@@ -31,6 +33,7 @@ import com.example.littlelemon.data.model.FieldNames
 import com.example.littlelemon.data.model.TextFieldValues
 import com.example.littlelemon.data.model.UserInputState
 import com.example.littlelemon.functions.extended.showMessage
+import com.example.littlelemon.functions.helper.checkMatch
 import com.example.littlelemon.functions.helper.getUserInfo
 import com.example.littlelemon.ui.components.AppButton
 import com.example.littlelemon.ui.components.AppTextField
@@ -42,6 +45,45 @@ fun ProfileScreen(
     horizontalScreenPadding: Dp,
     context: Context,
     sharedPreferences: SharedPreferences,
+    navController: NavHostController
+) {
+
+    var logout by remember { mutableStateOf(false) }
+
+
+    Scaffold(
+        topBar = { LittleLemonTopBar(navController = navController, screen = Profile) }
+    ) { innerPadding ->
+
+        ProfileForm(
+            innerPadding = innerPadding,
+            horizontalScreenPadding = horizontalScreenPadding,
+            sharedPreferences = sharedPreferences,
+            context = context,
+            confirmLogout = { logout = true },
+            navController = navController
+        )
+
+        if (logout) {
+            ConfirmLogout(
+                sharedPreferences = sharedPreferences,
+                navController = navController,
+                context = context,
+                closeDialog = { logout = false }
+            )
+        }
+
+    }
+}
+
+
+@Composable
+private fun ProfileForm(
+    innerPadding: PaddingValues,
+    horizontalScreenPadding: Dp,
+    sharedPreferences: SharedPreferences,
+    context: Context,
+    confirmLogout: () -> Unit,
     navController: NavHostController
 ) {
 
@@ -64,137 +106,145 @@ fun ProfileScreen(
         )
     }
 
-    var logout by remember { mutableStateOf(false) }
-
     val textFieldValue = listOf(
-        TextFieldValues().getFieldValue(FieldNames.FirstName, userInput),
-        TextFieldValues().getFieldValue(FieldNames.LastName, userInput),
-        TextFieldValues().getFieldValue(FieldNames.Email, userInput)
+        TextFieldValues(FieldNames.FirstName).getFieldValue(userInput),
+        TextFieldValues(FieldNames.LastName).getFieldValue(userInput),
+        TextFieldValues(FieldNames.Email).getFieldValue(userInput)
     )
 
-    Scaffold(
-        topBar = { LittleLemonTopBar(navController = navController, screen = Profile) }
-    ) { innerPadding ->
-        Column(
-            Modifier
-                .fillMaxSize()
-                .padding(horizontal = horizontalScreenPadding)
-                .padding(innerPadding),
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Personal information",
-                style = MaterialTheme.typography.titleMedium
+    val focusManager = LocalFocusManager.current
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = horizontalScreenPadding)
+            .padding(innerPadding),
+        verticalArrangement = Arrangement.Center
+    ) {
+
+        Text(
+            text = "Personal information",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(Modifier.height(35.dp))
+
+        textFieldValue.forEach { field ->
+            AppTextField(
+                title = field.title.name,
+                value = field.value,
+                onValueChange = { input ->
+                    userInput = userInput.updateData(field = field.title, value = input)
+                },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = field.keyboardType,
+                    imeAction = field.imeAction
+                ),
+                visualTransformation = field.visualTransformation,
+                isError = field.isError,
+                errorMessage = field.errorMessage
             )
-            Spacer(Modifier.height(35.dp))
-            textFieldValue.forEach { field ->
-                AppTextField(
-                    title = field.title.name,
-                    value = field.value,
-                    onValueChange = { input ->
-                        userInput = userInput.updateData(field = field.title, value = input)
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = field.keyboardType,
-                        imeAction = field.imeAction
-                    ),
-                    visualTransformation = field.visualTransformation,
-                    isError = field.isError,
-                    errorMessage = field.errorMessage
+        }
+
+        AppButton(
+            title = "Change password",
+            onClick = { navController.navigate(ChangePassword.route) }
+        )
+
+        AppButton(
+            title = "Save change",
+            onClick = {
+
+                userInput = userInput.validData()
+
+                userInput = userInput.copy(
+                    isAllDataValid = userInput.isFirstNameValid && userInput.isLastNameValid && userInput.isEmailValid
                 )
-            }
-            AppButton(
-                title = "Change password",
-                onClick = { navController.navigate(ChangePassword.route) }
-            )
-            AppButton(
-                title = "Save change",
-                onClick = {
 
-                    userInput = userInput.validData()
-
-                    userInput = userInput.copy(
-                        thereIsNoError = !userInput.isFirstNameError && !userInput.isLastNameError && !userInput.isEmailError
+                val isItSameInfo =
+                    checkMatch(
+                        userInput = userInput.firstName,
+                        sharedPreferences = sharedPreferences,
+                        field = FieldNames.FirstName
+                    ) && checkMatch(
+                        userInput = userInput.lastName,
+                        sharedPreferences = sharedPreferences,
+                        field = FieldNames.LastName
+                    ) && checkMatch(
+                        userInput = userInput.email,
+                        sharedPreferences = sharedPreferences,
+                        field = FieldNames.Email
                     )
 
-                    val isItSameInfo =
-                        userInput.firstName.trim() == getUserInfo(
-                            sharedPreferences = sharedPreferences,
-                            field = FieldNames.FirstName
-                        ).trim() &&
-                                userInput.lastName.trim() == getUserInfo(
-                            sharedPreferences = sharedPreferences,
-                            field = FieldNames.LastName
-                        ).trim() &&
-                                userInput.email == getUserInfo(
-                            sharedPreferences = sharedPreferences,
-                            field = FieldNames.Email
-                        )
+                if (userInput.isAllDataValid && !isItSameInfo) {
+                    sharedPreferences.edit {
+                        putString(FieldNames.FirstName.name, userInput.firstName.trim())
+                        putString(FieldNames.LastName.name, userInput.lastName.trim())
+                        putString(FieldNames.Email.name, userInput.email)
+                    }
+                }
 
-                    if (userInput.thereIsNoError && !isItSameInfo) {
-                        sharedPreferences.edit {
-                            putString(FieldNames.FirstName.name, userInput.firstName.trim())
-                            putString(FieldNames.LastName.name, userInput.lastName.trim())
-                            putString(FieldNames.Email.name, userInput.email)
+                if (userInput.isAllDataValid)
+                    context.showMessage(
+                        if (!isItSameInfo)
+                            "Your changes have been saved successfully."
+                        else
+                            "No new information to update."
+                    )
+
+                focusManager.clearFocus()
+            },
+        )
+        AppButton(
+            title = "Logout",
+            onClick = confirmLogout
+        )
+    }
+}
+
+@Composable
+private fun ConfirmLogout(
+    sharedPreferences: SharedPreferences,
+    navController: NavHostController,
+    context: Context,
+    closeDialog: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = { closeDialog() },
+        title = { Text("Logout") },
+        text = { Text("Are you sure you want to Logout") },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    sharedPreferences.edit {
+                        putBoolean("isUserOnboarding", true)
+                        navController.navigate(OnBoarding.route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
                     }
 
-                    if (userInput.thereIsNoError)
-                        context.showMessage(
-                            if (!isItSameInfo) "Your changes have been saved successfully." else "No new information to update."
-                        )
+                    context.showMessage("Logout successful")
+                    closeDialog()
                 },
-            )
-            AppButton(
-                title = "Logout",
-                onClick = { logout = true }
-            )
+            ) {
+                Text(
+                    text = "Yes",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = { closeDialog() }
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
-
-        val closeDialog = { logout = false }
-
-        if (logout) {
-            AlertDialog(
-                onDismissRequest = { closeDialog() },
-                title = { Text(text = "Logout") },
-                text = {
-                    Text("Are you sure you want to Logout")
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            sharedPreferences.edit {
-                                putBoolean("isUserOnboarding", true)
-                                navController.navigate(OnBoarding.route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        inclusive = true
-                                    }
-                                    launchSingleTop = true
-                                }
-
-                                context.showMessage("Logout successful")
-                            }
-
-                            closeDialog()
-                        },
-                    ) {
-                        Text(
-                            text = "Yes",
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { closeDialog() }
-                    ) {
-                        Text(
-                            text = "Cancel",
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
-            )
-        }
-    }
+    )
 }
