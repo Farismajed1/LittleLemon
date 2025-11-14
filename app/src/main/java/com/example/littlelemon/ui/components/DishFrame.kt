@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,21 +33,20 @@ fun DishFrame(
             .clickable(onClick = onClick),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column(
-            Modifier
-                .fillMaxWidth(.7f)
-                .height(95.dp),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
+        Column(Modifier.fillMaxWidth(.7f)) {
             Text(text = dish.title, style = MaterialTheme.typography.titleSmall)
-            Text(dish.description.take(65) + "...")
+            Spacer(Modifier.height(4.dp))
+            Text(dish.description.take(45) + "...")
+            Spacer(Modifier.height(4.dp))
             Text("$${dish.price}")
         }
         AsyncImage(
-            modifier = Modifier.size(95.dp),
+            modifier = Modifier
+                .fillMaxWidth(.9f)
+                .height(95.dp),
             model = dish.image,
             contentDescription = "${dish.title} image",
-            contentScale = ContentScale.Fit,
+            contentScale = ContentScale.Crop,
         )
     }
 }

@@ -46,6 +46,7 @@ fun Navigation(
             HomeScreen(
                 horizontalScreenPadding = horizontalScreenPadding,
                 dishList = dishList,
+                context = context,
                 navController = navController
             )
         }
