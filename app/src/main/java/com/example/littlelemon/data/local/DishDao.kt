@@ -17,4 +17,7 @@ interface DishDao {
     @Insert
     fun insertAll(vararg dishes: Dish)
 
+    @Query("DELETE FROM dish")
+    fun deleteAll()
+
 }

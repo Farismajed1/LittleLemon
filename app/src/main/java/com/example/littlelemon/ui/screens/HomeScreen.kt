@@ -1,5 +1,6 @@
 package com.example.littlelemon.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -29,12 +30,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -43,6 +44,7 @@ import com.example.littlelemon.Home
 import com.example.littlelemon.R
 import com.example.littlelemon.data.model.CategoriesNames
 import com.example.littlelemon.data.model.Dish
+import com.example.littlelemon.functions.helper.isNetworkAvailable
 import com.example.littlelemon.ui.components.DishFrame
 import com.example.littlelemon.ui.components.LittleLemonTopBar
 
@@ -51,6 +53,7 @@ import com.example.littlelemon.ui.components.LittleLemonTopBar
 fun HomeScreen(
     horizontalScreenPadding: Dp,
     dishList: List<Dish>,
+    context: Context,
     navController: NavHostController
 ) {
 
@@ -92,6 +95,22 @@ fun HomeScreen(
                 )
             }
 
+            item {
+                if(!isNetworkAvailable(context = context)){
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.error)
+                            .padding(all = 4.dp),
+                        text = if(dishList.isEmpty()) "No dishes found. Please check your internet connection." else
+                            "You are offline. Some data may be missing.",
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                }
+            }
+
+
             items(filteredDishes) { dish ->
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary)
@@ -104,18 +123,6 @@ fun HomeScreen(
                     }
                 )
             }
-
-            item {
-                if(dishList.isEmpty()){
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ){
-                        Text("No dishes found. Please check your internet connection.")
-                    }
-                }
-            }
-
         }
     }
 }
